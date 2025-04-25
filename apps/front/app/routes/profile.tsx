@@ -1,6 +1,8 @@
 import type { Route } from "./+types/profile";
+import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { updateProfile } from "../store/userReducer";
+import type { UserState } from "../types";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -31,24 +33,25 @@ export function HydrateFallback() {
 }
 
 export default function Profile() {
-  const user = useSelector((state) => state.user);
+  const user = useSelector((state: UserState) => state.user);
   const dispatch = useDispatch();
 
   const handleChange = () => {
-    dispatch(updateProfile({ firstName: "Jane", lastName: "Doe" }));
+    dispatch(updateProfile({ user: { firstName: "Jane", lastName: "Doe" } }));
   };
 
   return (
     <>
-      <button onClick={handleChange}>Update Profile</button>
-
+      USER : {user.token}
       <div className="header">
         <h1>
           Welcome back
           <br />
-          {user.firstName} {user.lastName}!
+          {user?.firstName} {user?.lastName}!
         </h1>
-        <button className="edit-button">Edit Name</button>
+        <button className="edit-button" onClick={handleChange}>
+          Edit Name
+        </button>
       </div>
       <h2 className="sr-only">Accounts</h2>
       <section className="account">

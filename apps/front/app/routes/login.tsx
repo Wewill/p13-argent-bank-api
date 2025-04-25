@@ -1,8 +1,11 @@
 import type { Route } from "./+types/login";
-import React, { useState } from "react";
-import { useDispatch } from "react-redux";
-import { loginUser } from "../store/userReducer";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
+import { useDispatch, useSelector } from "react-redux";
+import { authUser } from "../store/userReducer";
+
+import type { AppDispatch } from "../store/store";
+import type { UserState } from "../types/User";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "login" }, { name: "description", content: "Lorem ipsum" }];
@@ -11,23 +14,24 @@ export function meta({}: Route.MetaArgs) {
 export default function Login() {
   const [email, setEmail] = useState("tony@stark.com");
   const [password, setPassword] = useState("password123");
-  let dispatch = useDispatch();
+
+  let dispatch: AppDispatch = useDispatch(); // Correctly typed dispatch
   let navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    console.log("handleLogin::", e);
+  let user = useSelector((state: { user: UserState }) => state.user);
+  console.log("user::", user);
 
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const resultAction = await dispatch(loginUser({ email, password }));
-    // console.log("resultAction", resultAction);
-    // Ici set le token dans le store
-
-    if (loginUser.fulfilled.match(resultAction)) {
-      navigate("/profile"); // redirection après succès
-    } else {
-      alert("Login échoué");
-    }
+    if (!user) return;
+    dispatch(authUser({ email, password }));
   };
+
+  useEffect(() => {
+    if (user && user.token) {
+      navigate("/profile");
+    }
+  }, [user, navigate]);
 
   return (
     <>
@@ -42,7 +46,6 @@ export default function Login() {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              defaultValue="tony@stark.com"
             />
           </div>
           <div className="input-wrapper">
@@ -52,7 +55,6 @@ export default function Login() {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              defaultValue="password123"
             />
           </div>
           <div className="input-remember">
