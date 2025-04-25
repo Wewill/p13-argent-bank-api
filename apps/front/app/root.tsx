@@ -7,15 +7,16 @@ import {
   ScrollRestoration,
 } from "react-router";
 
-// import { Provider } from 'react-redux'
-
 import type { Route } from "./+types/root";
 import "./app.css";
 import "./css/main.css";
 
 import Header from "./components/header";
 import Footer from "./components/footer";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
+
+import { Provider } from "react-redux";
+import store from "./store/store";
 
 export const links: Route.LinksFunction = () => [
   {
@@ -33,8 +34,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body>        
-        {children}
+      <body>
+        <Provider store={store}>{children}</Provider>
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -43,14 +44,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  let location = useLocation(); // Get the current location object
+
   return (
     <>
-    <Header />
-    <main className="p-0 m-0">
-      <Outlet />
-    </main>
-    <Footer />
-  </>);
+      <Header />
+      <main className={`main ${location.pathname !== "/" ? "bg-dark" : ""}`}>
+        <Outlet />
+      </main>
+      <Footer />
+    </>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
