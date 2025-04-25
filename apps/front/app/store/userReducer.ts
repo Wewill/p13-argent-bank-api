@@ -90,9 +90,10 @@ const userActions = createSlice({
       state.isAuthenticated = true;
     },
     logout: (state) => {
-      console.log("logout::", state.token);
-      state = initialState;
-      console.log("logout:: AFTER", state.token);
+      // Go back to initialState object
+      // Object.assign(state, initialState);
+      // Better practice
+      return { ...initialState };
     },
     updateProfile: (state, action: PayloadAction<UserState>) => {
       console.log(
@@ -101,7 +102,6 @@ const userActions = createSlice({
         action.payload.user?.firstName,
         action.payload.user
       );
-
       state.user = action.payload.user;
     },
   },
@@ -118,7 +118,7 @@ const userActions = createSlice({
         });
         // Update
         userActions.caseReducers.updateProfile(state, {
-          payload: { user: { ...action.payload.user } },
+          payload: { user: action.payload.user },
           type: "user/updateProfile",
         });
       })
