@@ -50,14 +50,12 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
   useEffect(() => {
     if (!user || !user.token) {
-      navigate("/login");
+      // navigate("/login");
     }
   }, [user, navigate]);
 
   return (
     <>
-      <h1>Home</h1>
-      <p>Welcome to Argent Bank!</p>
       <Hero />
       <Features />
     </>
