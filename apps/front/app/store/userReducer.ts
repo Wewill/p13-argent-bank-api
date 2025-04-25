@@ -16,19 +16,19 @@ export const authUser = createAsyncThunk(
   "user/loginUser",
   async ({ email, password }: LoginCredentials, thunkAPI) => {
     try {
-      console.log("loginUser::", email, password, apiUrl);
+      console.log("authUser::", email, password, apiUrl);
 
       const login = await loginUser({ email, password });
-      console.log("login::", login.token);
+      console.log("get token::", login.token);
 
       if (!login.token) {
         return thunkAPI.rejectWithValue("Token is null");
       }
 
       const user = await getUser(login.token);
-      console.log("user::", user);
+      console.log("get user::", user);
 
-      return { token: login.token, user }; // ex : body: { user, token } ...
+      return { token: login.token, user: user }; // ex : body: { user, token } ...
     } catch (error) {
       // debugger;
       return thunkAPI.rejectWithValue((error as Error)?.message);
@@ -85,19 +85,24 @@ const userActions = createSlice({
       state.value--
     },
     */
-    login: (state, action) => {
+    login: (state, action: PayloadAction<AuthState>) => {
       state.token = action.payload.token;
       state.isAuthenticated = true;
     },
     logout: (state) => {
-      state.token = null;
-      state.isAuthenticated = false;
+      console.log("logout::", state.token);
+      state = initialState;
+      console.log("logout:: AFTER", state.token);
     },
     updateProfile: (state, action: PayloadAction<UserState>) => {
-      if (!state.user) return state;
-      state.user.firstName = action.payload.user?.firstName || "";
-      state.user.lastName = action.payload.user?.lastName || "";
-      state.user.email = action.payload.user?.email || "";
+      console.log(
+        "updateProfile::",
+        action.payload,
+        action.payload.user?.firstName,
+        action.payload.user
+      );
+
+      state.user = action.payload.user;
     },
   },
   // Documentation: https://redux-toolkit.js.org/api/createSlice#handling-asynchronous-logic
@@ -106,24 +111,16 @@ const userActions = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(authUser.fulfilled, (state, action) => {
-        console.log(
-          "payload::",
-          action.payload,
-          action.payload.user?.firstName
-        );
-
-        state.token = action.payload.token;
-        // userActions.caseReducers.login(state, {
-        //   payload: { token: action.payload.token },
-        //   type: "user/login",
-        // });
-
-        state.user = {
-          firstName: action.payload.user?.firstName,
-          lastName: action.payload.user.lastName,
-          email: action.payload.user.email,
-        };
-        state.isAuthenticated = true;
+        // Login
+        userActions.caseReducers.login(state, {
+          payload: { token: action.payload.token },
+          type: "user/login",
+        });
+        // Update
+        userActions.caseReducers.updateProfile(state, {
+          payload: { user: { ...action.payload.user } },
+          type: "user/updateProfile",
+        });
       })
       .addCase(authUser.rejected, (state, action) => {
         console.error("Erreur de login: rejected", action.payload);

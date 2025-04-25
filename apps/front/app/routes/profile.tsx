@@ -1,8 +1,11 @@
 import type { Route } from "./+types/profile";
 import { useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router";
+import { useDispatch, useSelector } from "react-redux";
 import { updateProfile } from "../store/userReducer";
-import type { UserState } from "../types";
+
+import type { AppDispatch } from "../store/store";
+import type { UserState } from "../types/User";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -33,12 +36,21 @@ export function HydrateFallback() {
 }
 
 export default function Profile() {
-  const user = useSelector((state: UserState) => state.user);
-  const dispatch = useDispatch();
+  let dispatch: AppDispatch = useDispatch(); // Correctly typed dispatch
+  let navigate = useNavigate();
+
+  let user = useSelector((state: { user: UserState }) => state.user);
+  console.log("user::", user);
 
   const handleChange = () => {
     dispatch(updateProfile({ user: { firstName: "Jane", lastName: "Doe" } }));
   };
+
+  useEffect(() => {
+    if (!user || !user.token) {
+      navigate("/login");
+    }
+  }, [user, navigate]);
 
   return (
     <>
@@ -47,7 +59,7 @@ export default function Profile() {
         <h1>
           Welcome back
           <br />
-          {user?.firstName} {user?.lastName}!
+          {user.user?.firstName} {user.user?.lastName}!
         </h1>
         <button className="edit-button" onClick={handleChange}>
           Edit Name
