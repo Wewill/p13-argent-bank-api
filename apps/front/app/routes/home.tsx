@@ -47,7 +47,6 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   let navigate = useNavigate();
 
   let user = useSelector((state: { user: UserState }) => state.user);
-  console.log("user::", user);
 
   useEffect(() => {
     if (!user || !user.token) {

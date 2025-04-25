@@ -19,7 +19,6 @@ export default function Login() {
   let navigate = useNavigate();
 
   let user = useSelector((state: { user: UserState }) => state.user);
-  console.log("user::", user);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -11,7 +11,6 @@ export function Nav() {
   let navigate = useNavigate();
 
   let user = useSelector((state: { user: UserState }) => state.user);
-  console.log("user in NAV::", user);
 
   const handleLogOut = () => {
     dispatch(logout());

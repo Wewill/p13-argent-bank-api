@@ -40,7 +40,6 @@ export default function Profile() {
   let navigate = useNavigate();
 
   let user = useSelector((state: { user: UserState }) => state.user);
-  console.log("user::", user);
 
   const handleChange = () => {
     dispatch(updateProfile({ user: { firstName: "Jane", lastName: "Doe" } }));
