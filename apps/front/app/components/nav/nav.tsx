@@ -27,29 +27,34 @@ export function Nav() {
       >
         Home
       </NavLink>
-      <NavLink
-        to={href("/profile")}
-        className={({ isActive }) =>
-          `main-nav-item ${isActive ? "router-link-exact-active" : ""}`
-        }
-      >
-        {user.user?.firstName || "Account"}
-      </NavLink>
       {!user.user && (
-        <NavLink
-          to={href("/login")}
-          className={({ isActive }) =>
-            `main-nav-item ${isActive ? "router-link-exact-active" : ""}`
-          }
-        >
-          <i className="fa fa-user-circle"></i>
-          Sign In
-        </NavLink>
+        <>
+          <NavLink
+            to={href("/login")}
+            className={({ isActive }) =>
+              `main-nav-item ${isActive ? "router-link-exact-active" : ""}`
+            }
+          >
+            <i className="fa fa-user-circle me-1"></i>
+            Sign In
+          </NavLink>
+        </>
       )}
       {user.user && (
-        <button className="main-nav-item" onClick={handleLogOut}>
-          <i className="fa fa-user-circle"></i>Sign Out
-        </button>
+        <>
+          <NavLink
+            to={href("/profile")}
+            className={({ isActive }) =>
+              `main-nav-item ${isActive ? "router-link-exact-active" : ""}`
+            }
+          >
+            <i className="fa fa-user-circle me-1"></i>
+            {user.user?.firstName || "Account"}
+          </NavLink>
+          <button className="main-nav-item" onClick={handleLogOut}>
+            <i className="fa fa-sign-out me-1"></i>Sign Out
+          </button>
+        </>
       )}
     </nav>
   );

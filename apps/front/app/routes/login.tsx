@@ -34,7 +34,7 @@ export default function Login() {
 
   return (
     <>
-      <section className="sign-in-content">
+      <section className="sign-in-content rounded-sm">
         <i className="fa fa-user-circle sign-in-icon"></i>
         <h1>Sign In</h1>
         <form onSubmit={handleLogin}>
@@ -43,6 +43,7 @@ export default function Login() {
             <input
               type="text"
               id="email"
+              className="border-1 border-gray-300 rounded-sm"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -52,6 +53,7 @@ export default function Login() {
             <input
               type="password"
               id="password"
+              className="border-1 border-gray-300 rounded-sm"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -60,7 +62,7 @@ export default function Login() {
             <input type="checkbox" id="remember-me" />
             <label htmlFor="remember-me">Remember me</label>
           </div>
-          <button type="submit" className="sign-in-button">
+          <button type="submit" className="sign-in-button rounded-sm">
             Sign In
           </button>
         </form>

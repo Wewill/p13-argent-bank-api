@@ -53,9 +53,8 @@ export default function Profile() {
 
   return (
     <>
-      USER : {user.token}
       <div className="header">
-        <h1>
+        <h1 className="font-bold text-3xl">
           Welcome back
           <br />
           {user.user?.firstName} {user.user?.lastName}!

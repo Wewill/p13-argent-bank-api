@@ -5,7 +5,10 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  Link,
+  useLocation,
 } from "react-router";
+import { useState, useEffect } from "react";
 
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -13,10 +16,14 @@ import "./css/main.css";
 
 import Header from "./components/header";
 import Footer from "./components/footer";
-import { Link, useLocation } from "react-router";
+import Modal from "./components/modal/modal";
 
-import { Provider } from "react-redux";
+import { useDispatch, useSelector, Provider } from "react-redux";
+import type { AppDispatch } from "./store/store";
+import { updateError } from "./store/userReducer";
+
 import store from "./store/store";
+import type { UserState } from "./types";
 
 export const links: Route.LinksFunction = () => [
   {
@@ -46,10 +53,35 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   let location = useLocation(); // Get the current location object
 
+  const user = useSelector((state: UserState) => state.user);
+  const [showModal, setShowModal] = useState(false);
+
+  let dispatch: AppDispatch = useDispatch(); // Correctly typed dispatch
+
+  useEffect(() => {
+    if (user.error && user.error != "") {
+      setShowModal(true);
+    }
+  }, [user]);
+
   return (
     <>
       <Header />
       <main className={`main ${location.pathname !== "/" ? "bg-dark" : ""}`}>
+        {showModal && (
+          <>
+            <Modal
+              onClose={() => {
+                setShowModal(false);
+                dispatch(updateError(""));
+              }}
+              title="Erreur d'authentification"
+            >
+              <p>{user.error ?? "Unknow error"}</p>
+            </Modal>
+          </>
+        )}
+
         <Outlet />
       </main>
       <Footer />

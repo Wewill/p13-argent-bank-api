@@ -11,4 +11,5 @@ export interface UserState {
   //
   token?: string | null;
   isAuthenticated?: Boolean;
+  error?: string;
 }

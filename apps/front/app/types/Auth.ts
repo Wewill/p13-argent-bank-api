@@ -3,7 +3,6 @@ export interface AuthState {
   fulfilled?: boolean;
   pending?: boolean;
   rejected?: boolean;
-  error?: boolean;
 }
 
 export interface LoginCredentials {

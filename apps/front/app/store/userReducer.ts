@@ -9,6 +9,7 @@ const initialState: UserState = {
   //
   token: null,
   isAuthenticated: false,
+  error: "",
 };
 
 // https://redux-toolkit.js.org/rtk-query/usage/examples#authentication
@@ -22,6 +23,8 @@ export const authUser = createAsyncThunk(
       console.log("get token::", login.token);
 
       if (!login.token) {
+        console.error("authUser::error", "Token is null");
+        // throw new Error("Token is null");
         return thunkAPI.rejectWithValue("Token is null");
       }
 
@@ -31,7 +34,11 @@ export const authUser = createAsyncThunk(
       return { token: login.token, user: user }; // ex : body: { user, token } ...
     } catch (error) {
       // debugger;
-      return thunkAPI.rejectWithValue((error as Error)?.message);
+      console.error("authUser::error", error, (error as Error)?.message);
+      // throw new Error("Auth error");
+      return thunkAPI.rejectWithValue(
+        (error as Error)?.message || "Auth error"
+      );
     }
   }
 );
@@ -48,9 +55,17 @@ const loginUser = async ({
     body: JSON.stringify({ email, password }),
   });
 
+  console.log("loginUser::response", response, response.ok, response.status);
+
   // Gerer les erreurs de connexion 400 / 500
   if (!response.ok) {
-    throw new Error("Erreur lors de la connexion");
+    if (response.status === 400) {
+      throw new Error("Bad Request, user is unknown");
+    }
+    if (response.status === 500) {
+      throw new Error("Internal Server Error");
+    }
+    throw new Error("Unknown error");
   }
   let data = await response.json();
   return data.body;
@@ -104,6 +119,10 @@ const userActions = createSlice({
       );
       state.user = action.payload.user;
     },
+    updateError: (state, action: PayloadAction<string>) => {
+      console.error("updateError::", action.payload);
+      state.error = action.payload;
+    },
   },
   // Documentation: https://redux-toolkit.js.org/api/createSlice#handling-asynchronous-logic
   // // A "builder callback" function used to add more reducers
@@ -113,7 +132,7 @@ const userActions = createSlice({
       .addCase(authUser.fulfilled, (state, action) => {
         // Login
         userActions.caseReducers.login(state, {
-          payload: { token: action.payload.token },
+          payload: { token: action.payload.token as string },
           type: "user/login",
         });
         // Update
@@ -124,10 +143,14 @@ const userActions = createSlice({
       })
       .addCase(authUser.rejected, (state, action) => {
         console.error("Erreur de login: rejected", action.payload);
-        state = initialState;
+        userActions.caseReducers.updateError(state, {
+          payload: action.payload as string,
+          type: "user/updateError",
+        });
       });
   },
 });
 
-export const { login, logout, updateProfile } = userActions.actions;
+export const { login, logout, updateProfile, updateError } =
+  userActions.actions;
 export default userActions.reducer;
