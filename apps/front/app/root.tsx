@@ -75,7 +75,7 @@ export default function App() {
                 setShowModal(false);
                 dispatch(updateError(""));
               }}
-              title="Erreur d'authentification"
+              title="Damned, an error occurred !"
             >
               <p>{user.error ?? "Unknow error"}</p>
             </Modal>
