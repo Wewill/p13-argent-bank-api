@@ -1,8 +1,8 @@
 import type { Route } from "./+types/profile";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
-import { updateProfile } from "../store/userReducer";
+import { putUser } from "../store/userReducer";
 
 import type { AppDispatch } from "../store/store";
 import type { UserState } from "../types/User";
@@ -36,13 +36,30 @@ export function HydrateFallback() {
 }
 
 export default function Profile() {
+  const [editing, setEditing] = useState(false);
+
   let dispatch: AppDispatch = useDispatch(); // Correctly typed dispatch
   let navigate = useNavigate();
 
   let user = useSelector((state: { user: UserState }) => state.user);
+  const [name, setName] = useState({
+    firstName: user.user?.firstName,
+    lastName: user.user?.lastName,
+  });
 
   const handleChange = () => {
-    dispatch(updateProfile({ user: { firstName: "Jane", lastName: "Doe" } }));
+    // dispatch(
+    //   // updateProfile({
+    //   //   user: { firstName: name.firstName, lastName: name.lastName },
+    //   // })
+    // );
+
+    dispatch(
+      putUser({
+        token: user?.token,
+        user: { firstName: name.firstName, lastName: name.lastName },
+      })
+    );
   };
 
   useEffect(() => {
@@ -59,9 +76,47 @@ export default function Profile() {
           <br />
           {user.user?.firstName} {user.user?.lastName}!
         </h1>
-        <button className="edit-button" onClick={handleChange}>
-          Edit Name
-        </button>
+        {editing ? (
+          <div className="edit-form">
+            <div className="input-wrapper flex !flex-row items-center justify-center gap-4">
+              <input
+                type="text"
+                placeholder="First Name"
+                className="border-1 border-gray-300 rounded-sm bg-slate-800 w-50"
+                value={name.firstName || ""}
+                onChange={(e) =>
+                  setName({ ...name, firstName: e.target.value })
+                }
+              />
+              <input
+                type="text"
+                placeholder="Last Name"
+                className="border-1 border-gray-300 rounded-sm bg-slate-800 w-50"
+                value={name.lastName || ""}
+                onChange={(e) => setName({ ...name, lastName: e.target.value })}
+              />
+            </div>
+            <button className="save-button" onClick={() => handleChange()}>
+              Save
+            </button>
+            <button
+              className="cancel-button"
+              onClick={() => {
+                setEditing(false);
+                setName({
+                  firstName: user.user?.firstName,
+                  lastName: user.user?.lastName,
+                });
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button className="edit-button" onClick={() => setEditing(true)}>
+            Edit Name
+          </button>
+        )}
       </div>
       <h2 className="sr-only">Accounts</h2>
       <section className="account">

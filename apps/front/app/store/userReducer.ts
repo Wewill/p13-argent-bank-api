@@ -43,6 +43,30 @@ export const authUser = createAsyncThunk(
   }
 );
 
+export const putUser = createAsyncThunk(
+  "user/putUser",
+  async (newUser: UserState, thunkAPI) => {
+    try {
+      console.log("putUser::", newUser, apiUrl, thunkAPI);
+
+      // Get token from state
+      const { token } = thunkAPI.getState().user;
+
+      const data = await setUser(token, newUser);
+      console.log("put user::result data", data);
+
+      return { user: data }; // ex : body: { user, token } ...
+    } catch (error) {
+      // debugger;
+      console.error("putUser::error", error, (error as Error)?.message);
+      // throw new Error("Auth error");
+      return thunkAPI.rejectWithValue(
+        (error as Error)?.message || "Save user error"
+      );
+    }
+  }
+);
+
 const loginUser = async ({
   email,
   password,
@@ -79,6 +103,41 @@ const getUser = async (token: string): Promise<UserState> => {
 
   if (!response.ok) {
     throw new Error("Erreur lors de la connexion");
+  }
+
+  let data = await response.json();
+  return data.body;
+};
+
+const setUser = async (
+  token: string,
+  newUser: UserState
+): Promise<UserState> => {
+  console.log(
+    "setUser::",
+    token,
+    newUser.user,
+    newUser.user?.firstName,
+    apiUrl
+  );
+
+  const response = await fetch(`${apiUrl}/api/v1/user/profile`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}` },
+    body: {
+      firstName: newUser.user?.firstName,
+      lastName: newUser.user?.lastName,
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("Token malformed");
+    }
+    if (response.status === 500) {
+      throw new Error("Internal Server Error");
+    }
+    throw new Error("Unknown error");
   }
 
   let data = await response.json();
