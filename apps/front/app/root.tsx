@@ -6,8 +6,8 @@ import {
   Scripts,
   ScrollRestoration,
   Link,
-  useLocation,
 } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useState, useEffect } from "react";
 
 import type { Route } from "./+types/root";
@@ -20,7 +20,11 @@ import Modal from "./components/modal/modal";
 
 import { useDispatch, useSelector, Provider } from "react-redux";
 import type { AppDispatch } from "./store/store";
-import { updateError } from "./store/userReducer";
+import {
+  initProfile,
+  updateError,
+  updateRedirectTo,
+} from "./store/userReducer";
 
 import store from "./store/store";
 import type { UserState } from "./types";
@@ -51,18 +55,34 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  // Init
   let location = useLocation(); // Get the current location object
-
-  const user = useSelector((state: UserState) => state.user);
-  const [showModal, setShowModal] = useState(false);
-
+  let navigate = useNavigate(); // Get the navigate function
   let dispatch: AppDispatch = useDispatch(); // Correctly typed dispatch
 
   useEffect(() => {
-    if (user.error && user.error != "") {
+    // On first load, init app
+    dispatch(initProfile({ location }));
+  }, [location, navigate]);
+
+  // Redirect
+  const redirectTo = useSelector((state: UserState) => state.redirectTo);
+  useEffect(() => {
+    if (redirectTo) {
+      navigate(redirectTo);
+    }
+    dispatch(updateRedirectTo(null));
+  }, [redirectTo]);
+
+  // Error
+  const error = useSelector((state: UserState) => state.error);
+  const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    if (error) {
       setShowModal(true);
     }
-  }, [user]);
+  }, [error]);
 
   return (
     <>
@@ -77,11 +97,10 @@ export default function App() {
               }}
               title="Damned, an error occurred !"
             >
-              <p>{user.error ?? "Unknow error"}</p>
+              <p>{error ?? "Unknow error"}</p>
             </Modal>
           </>
         )}
-
         <Outlet />
       </main>
       <Footer />
@@ -124,3 +143,45 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     </>
   );
 }
+
+// V2 : Mathieu, ne pas charger le modal dans le layout
+// const ModalError = ({}) => {
+//   const error = useSelector((state: UserState) => state.error);
+//   const dispatch: AppDispatch = useDispatch(); // Correctly typed dispatch
+//   const onClose = () => {
+//     dispatch(updateError(null));
+//   };
+
+//   if (!error) {
+//     return null; // Don't render the modal if there's no error
+//   }
+
+//   return (
+//     <Modal onClose={onClose} title="Damned, an error occurred !">
+//       <p>{error ?? "Unknow error"}</p>
+//     </Modal>
+//   );
+// };
+
+// export default function App() {
+//   let location = useLocation(); // Get the current location object
+//   // let user = useSelector((state: { user: UserState }) => state.user);
+
+//   let dispatch: AppDispatch = useDispatch(); // Correctly typed dispatch
+
+//   useEffect(() => {
+//     // On first load, init app
+//     dispatch(initProfile());
+//   }, []);
+
+//   return (
+//     <>
+//       <Header />
+//       <main className={`main ${location.pathname !== "/" ? "bg-dark" : ""}`}>
+//         <ModalError />
+//         <Outlet />
+//       </main>
+//       <Footer />
+//     </>
+//   );
+// }

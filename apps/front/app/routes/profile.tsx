@@ -1,8 +1,8 @@
 import type { Route } from "./+types/profile";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
-import { putUser } from "../store/userReducer";
+import { putUser, getUser, initProfile } from "../store/userReducer";
 
 import type { AppDispatch } from "../store/store";
 import type { UserState } from "../types/User";
@@ -14,14 +14,8 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export async function clientLoader({ params }: Route.ClientLoaderArgs) {
-  // console.log("clientLoader::userId", params.userId);
-  // const single = await getLogement(params.singleId);
-  // // https://reactrouter.com/tutorials/address-book#throwing-responses
-  // if (!single) {
-  //   throw new Response("Not Found", { status: 404 });
-  // }
-  // return { single };
+export async function clientLoader({}: Route.ClientLoaderArgs) {
+  return {};
 }
 
 // HydrateFallback is rendered while the client loader is running
@@ -36,41 +30,46 @@ export function HydrateFallback() {
 }
 
 export default function Profile() {
-  const [editing, setEditing] = useState(false);
-
+  // Init
+  let location = useLocation(); // Get the current location object
+  let navigate = useNavigate(); // Get the navigate function
   let dispatch: AppDispatch = useDispatch(); // Correctly typed dispatch
-  let navigate = useNavigate();
 
-  let user = useSelector((state: { user: UserState }) => state.user);
+  useEffect(() => {
+    // On first load, init app
+    dispatch(initProfile({ location }));
+  }, []);
+
+  // Editing
+  const [editing, setEditing] = useState(false);
+  let { user } = useSelector((state: { user: UserState }) => state);
   const [name, setName] = useState({
     firstName: user.user?.firstName,
     lastName: user.user?.lastName,
   });
 
-  const handleChange = () => {
-    // dispatch(
-    //   // updateProfile({
-    //   //   user: { firstName: name.firstName, lastName: name.lastName },
-    //   // })
-    // );
-
-    dispatch(
+  const handleChange = async () => {
+    await dispatch(
       putUser({
         token: user?.token,
-        user: { firstName: name.firstName, lastName: name.lastName },
+        user: {
+          firstName: name.firstName ?? "",
+          lastName: name.lastName ?? "",
+        },
       })
     );
+    setEditing(false);
+    dispatch(getUser());
   };
-
-  useEffect(() => {
-    if (!user || !user.token) {
-      navigate("/login");
-    }
-  }, [user, navigate]);
 
   return (
     <>
       <div className="header">
+        {JSON.stringify(user)}
+        <br />
+        <pre>{user.user?.firstName}</pre>
+
+        <i className="fa fa-user-circle user-icon"></i>
         <h1 className="font-bold text-3xl">
           Welcome back
           <br />

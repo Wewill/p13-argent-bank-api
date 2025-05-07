@@ -1,15 +1,18 @@
 export interface UserState {
-  user: {
-    firstName: string;
-    lastName: string;
-    email?: string;
-    //
-    createdAt?: string;
-    id?: string;
-    updatedAt?: string;
-  } | null;
+  user: User | null;
   //
   token?: string | null;
   isAuthenticated?: Boolean;
-  error?: string;
+  error?: string | null;
+  redirectTo?: string | null;
+}
+
+export interface User {
+  firstName: string;
+  lastName: string;
+  email?: string;
+  //
+  createdAt?: string;
+  id?: string;
+  updatedAt?: string;
 }

@@ -1,8 +1,8 @@
 import type { Route } from "./+types/login";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
-import { authUser } from "../store/userReducer";
+import { initProfile, authUser } from "../store/userReducer";
 
 import type { AppDispatch } from "../store/store";
 import type { UserState } from "../types/User";
@@ -12,11 +12,19 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Login() {
+  // Init
+  let location = useLocation(); // Get the current location object
+  let navigate = useNavigate(); // Get the navigate function
+  let dispatch: AppDispatch = useDispatch(); // Correctly typed dispatch
+
+  useEffect(() => {
+    // On first load, init app
+    dispatch(initProfile({ location }));
+  }, []);
+
+  // Login
   const [email, setEmail] = useState("tony@stark.com");
   const [password, setPassword] = useState("password123");
-
-  let dispatch: AppDispatch = useDispatch(); // Correctly typed dispatch
-  let navigate = useNavigate();
 
   let user = useSelector((state: { user: UserState }) => state.user);
 
@@ -25,12 +33,6 @@ export default function Login() {
     if (!user) return;
     dispatch(authUser({ email, password }));
   };
-
-  useEffect(() => {
-    if (user && user.token) {
-      navigate("/profile");
-    }
-  }, [user, navigate]);
 
   return (
     <>

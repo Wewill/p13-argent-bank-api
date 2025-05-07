@@ -1,25 +1,41 @@
+const apiUrl = process.env.API_URL;
+
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
-import type { LoginCredentials, UserState, AuthState } from "../types";
+import type { LoginCredentials, UserState, AuthState, User } from "../types";
+import { loginUserFetch, getUserFetch, setUserFetch } from "./fetch";
 
-const apiUrl = process.env.API_URL;
+import type { RootState } from "./store";
+
+import type { useNavigate, useLocation } from "react-router";
+
+import { useDispatch } from "react-redux";
+import type { AppDispatch } from "./store";
 
 const initialState: UserState = {
   user: null,
   //
-  token: null,
+  token:
+    (typeof document !== "undefined" &&
+      document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("api_token="))
+        ?.split("=")[1]) ||
+    null,
   isAuthenticated: false,
-  error: "",
+  error: null,
+  redirectTo: null,
 };
 
+// Async actions
 // https://redux-toolkit.js.org/rtk-query/usage/examples#authentication
 export const authUser = createAsyncThunk(
-  "user/loginUser",
+  "user/authUser",
   async ({ email, password }: LoginCredentials, thunkAPI) => {
     try {
       console.log("authUser::", email, password, apiUrl);
 
-      const login = await loginUser({ email, password });
+      const login = await loginUserFetch({ email, password });
       console.log("get token::", login.token);
 
       if (!login.token) {
@@ -28,16 +44,46 @@ export const authUser = createAsyncThunk(
         return thunkAPI.rejectWithValue("Token is null");
       }
 
-      const user = await getUser(login.token);
-      console.log("get user::", user);
-
-      return { token: login.token, user: user }; // ex : body: { user, token } ...
+      return { token: login.token };
     } catch (error) {
       // debugger;
       console.error("authUser::error", error, (error as Error)?.message);
       // throw new Error("Auth error");
       return thunkAPI.rejectWithValue(
         (error as Error)?.message || "Auth error"
+      );
+    }
+  }
+);
+
+export const getUser = createAsyncThunk(
+  "user/getUser",
+  async (undefined, thunkAPI) => {
+    console.log("getUser::getUser", apiUrl, thunkAPI);
+
+    try {
+      console.log("getUser::", apiUrl, thunkAPI);
+
+      // Get token from state
+      const state = thunkAPI.getState() as RootState;
+      const { token } = state.user ?? null;
+
+      const user = await getUserFetch(token);
+      console.log("get user::", user);
+
+      if (!user) {
+        console.error("getUser::error", "User is null");
+        // throw new Error("Token is null");
+        return thunkAPI.rejectWithValue("User is null");
+      }
+
+      return { user: user };
+    } catch (error) {
+      // debugger;
+      console.error("getUser::error", error, (error as Error)?.message);
+      // throw new Error("Get user error");
+      return thunkAPI.rejectWithValue(
+        (error as Error)?.message || "Get user error"
       );
     }
   }
@@ -50,16 +96,17 @@ export const putUser = createAsyncThunk(
       console.log("putUser::", newUser, apiUrl, thunkAPI);
 
       // Get token from state
-      const { token } = thunkAPI.getState().user;
+      const state = thunkAPI.getState() as RootState;
+      const { token } = state.user ?? null;
 
-      const data = await setUser(token, newUser);
+      const data = await setUserFetch(token, newUser);
       console.log("put user::result data", data);
 
       return { user: data }; // ex : body: { user, token } ...
     } catch (error) {
       // debugger;
       console.error("putUser::error", error, (error as Error)?.message);
-      // throw new Error("Auth error");
+      // throw new Error("Set user error");
       return thunkAPI.rejectWithValue(
         (error as Error)?.message || "Save user error"
       );
@@ -67,89 +114,11 @@ export const putUser = createAsyncThunk(
   }
 );
 
-const loginUser = async ({
-  email,
-  password,
-}: LoginCredentials): Promise<AuthState> => {
-  const response = await fetch(`${apiUrl}/api/v1/user/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email, password }),
-  });
-
-  console.log("loginUser::response", response, response.ok, response.status);
-
-  // Gerer les erreurs de connexion 400 / 500
-  if (!response.ok) {
-    if (response.status === 400) {
-      throw new Error("Bad Request, user is unknown");
-    }
-    if (response.status === 500) {
-      throw new Error("Internal Server Error");
-    }
-    throw new Error("Unknown error");
-  }
-  let data = await response.json();
-  return data.body;
-};
-
-const getUser = async (token: string): Promise<UserState> => {
-  const response = await fetch(`${apiUrl}/api/v1/user/profile`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
-  if (!response.ok) {
-    throw new Error("Erreur lors de la connexion");
-  }
-
-  let data = await response.json();
-  return data.body;
-};
-
-const setUser = async (
-  token: string,
-  newUser: UserState
-): Promise<UserState> => {
-  console.log(
-    "setUser::",
-    token,
-    newUser.user,
-    newUser.user?.firstName,
-    apiUrl
-  );
-
-  const response = await fetch(`${apiUrl}/api/v1/user/profile`, {
-    method: "PUT",
-    headers: { Authorization: `Bearer ${token}` },
-    body: {
-      firstName: newUser.user?.firstName,
-      lastName: newUser.user?.lastName,
-    },
-  });
-
-  if (!response.ok) {
-    if (response.status === 401) {
-      throw new Error("Token malformed");
-    }
-    if (response.status === 500) {
-      throw new Error("Internal Server Error");
-    }
-    throw new Error("Unknown error");
-  }
-
-  let data = await response.json();
-  return data.body;
-};
-
 // A slice manages user state with initial state, reducers, and actions.
 const userActions = createSlice({
   name: "user",
   initialState,
-  // // An object of "case reducers". Key names will be used to generate actions.
-  // reducers: Record<string, ReducerFunction | ReducerAndPrepareObject>,
+  // An object of "case reducers". Key names will be used to generate actions.
   reducers: {
     /*
     increment(state) {
@@ -160,32 +129,54 @@ const userActions = createSlice({
     },
     */
     login: (state, action: PayloadAction<AuthState>) => {
+      console.log("login::");
+      document.cookie = `api_token=${action.payload.token}; path=/; max-age=3600`;
       state.token = action.payload.token;
       state.isAuthenticated = true;
     },
     logout: (state) => {
+      console.log("logout::");
+      document.cookie = "api_token=null; path=/; max-age=0";
       // Go back to initialState object
       // Object.assign(state, initialState);
       // Better practice
       return { ...initialState };
     },
-    updateProfile: (state, action: PayloadAction<UserState>) => {
-      console.log(
-        "updateProfile::",
-        action.payload,
-        action.payload.user?.firstName,
-        action.payload.user
-      );
-      state.user = action.payload.user;
+    // Updated initProfile reducer to accept location and navigate as arguments
+    initProfile: (
+      state,
+      action: PayloadAction<{
+        location: ReturnType<typeof useLocation>;
+      }>
+    ) => {
+      let dispatch: AppDispatch = useDispatch(); // Correctly typed dispatch
+      const { location } = action.payload || {};
+      console.log("initProfile::", location);
+      if (!state.token) state.redirectTo = "/login";
+      if (state.token && !state.user?.id) {
+        console.log(
+          "initProfile:: We have a token, but no user, we can get the user"
+        );
+        //getUser();
+        dispatch(getUser());
+        if (location.pathname === "/login") state.redirectTo = "/profile";
+      }
     },
-    updateError: (state, action: PayloadAction<string>) => {
+    updateProfile: (state, action: PayloadAction<User>) => {
+      console.log("updateProfile::", action.payload);
+      state.user = action.payload;
+    },
+    updateError: (state, action: PayloadAction<string | null>) => {
       console.error("updateError::", action.payload);
       state.error = action.payload;
     },
+    updateRedirectTo: (state, action: PayloadAction<string | null>) => {
+      console.log("updateRedirectTo::", action.payload);
+      state.redirectTo = action.payload;
+    },
   },
   // Documentation: https://redux-toolkit.js.org/api/createSlice#handling-asynchronous-logic
-  // // A "builder callback" function used to add more reducers
-  // extraReducers?: (builder: ActionReducerMapBuilder<State>) => void,
+  // A "builder callback" function used to add more reducers
   extraReducers: (builder) => {
     builder
       .addCase(authUser.fulfilled, (state, action) => {
@@ -194,14 +185,23 @@ const userActions = createSlice({
           payload: { token: action.payload.token as string },
           type: "user/login",
         });
-        // Update
-        userActions.caseReducers.updateProfile(state, {
-          payload: { user: action.payload.user },
-          type: "user/updateProfile",
-        });
       })
       .addCase(authUser.rejected, (state, action) => {
         console.error("Erreur de login: rejected", action.payload);
+        userActions.caseReducers.updateError(state, {
+          payload: action.payload as string,
+          type: "user/updateError",
+        });
+      })
+      .addCase(getUser.fulfilled, (state, action) => {
+        // User
+        userActions.caseReducers.updateProfile(state, {
+          payload: action.payload.user,
+          type: "user/updateProfile",
+        });
+      })
+      .addCase(getUser.rejected, (state, action) => {
+        console.error("Erreur de l'api: rejected", action.payload);
         userActions.caseReducers.updateError(state, {
           payload: action.payload as string,
           type: "user/updateError",
@@ -210,6 +210,12 @@ const userActions = createSlice({
   },
 });
 
-export const { login, logout, updateProfile, updateError } =
-  userActions.actions;
+export const {
+  login,
+  logout,
+  initProfile,
+  updateProfile,
+  updateError,
+  updateRedirectTo,
+} = userActions.actions;
 export default userActions.reducer;
