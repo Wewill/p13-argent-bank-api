@@ -2,9 +2,8 @@ export interface UserState {
   user: User | null;
   //
   token?: string | null;
-  isAuthenticated?: Boolean;
   error?: string | null;
-  redirectTo?: string | null;
+  status?: string | null;
 }
 
 export interface User {

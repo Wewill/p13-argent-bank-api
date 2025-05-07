@@ -30,23 +30,24 @@ export function HydrateFallback() {
 }
 
 export default function Profile() {
-  // Init
-  let location = useLocation(); // Get the current location object
-  let navigate = useNavigate(); // Get the navigate function
   let dispatch: AppDispatch = useDispatch(); // Correctly typed dispatch
-
-  useEffect(() => {
-    // On first load, init app
-    dispatch(getUser({ currentLocation: location }));
-  }, [location]);
 
   // Editing
   const [editing, setEditing] = useState(false);
   let { user } = useSelector((state: { user: UserState }) => state);
   const [name, setName] = useState({
-    firstName: user.user?.firstName,
-    lastName: user.user?.lastName,
+    firstName: "",
+    lastName: "",
   });
+
+  useEffect(() => {
+    if (user.user) {
+      setName({
+        firstName: user.user?.firstName,
+        lastName: user.user?.lastName,
+      });
+    }
+  }, [user]);
 
   const handleChange = async () => {
     await dispatch(
@@ -59,17 +60,12 @@ export default function Profile() {
       })
     );
     setEditing(false);
-    dispatch(getUser({ currentLocation: null }));
+    dispatch(getUser());
   };
 
   return (
     <>
       <div className="header">
-        {JSON.stringify(user)}
-        <br />
-        <pre>{user.user?.firstName}</pre>
-
-        <i className="fa fa-user-circle user-icon"></i>
         <h1 className="font-bold text-3xl">
           Welcome back
           <br />

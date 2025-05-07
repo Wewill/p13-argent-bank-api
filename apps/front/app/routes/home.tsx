@@ -37,15 +37,15 @@ export function HydrateFallback() {
 }
 
 export default function Home({}: Route.ComponentProps) {
-  // Init
-  let location = useLocation(); // Get the current location object
-  let navigate = useNavigate(); // Get the navigate function
-  let dispatch: AppDispatch = useDispatch(); // Correctly typed dispatch
+  // // Init
+  // let location = useLocation(); // Get the current location object
+  // let navigate = useNavigate(); // Get the navigate function
+  // let dispatch: AppDispatch = useDispatch(); // Correctly typed dispatch
 
-  useEffect(() => {
-    // On first load, init app
-    dispatch(getUser({ currentLocation: location }));
-  }, [location]);
+  // useEffect(() => {
+  //   // On first load, init app
+  //   dispatch(getUser());
+  // }, [location]);
 
   return (
     <>
