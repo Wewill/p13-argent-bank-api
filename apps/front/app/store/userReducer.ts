@@ -58,26 +58,44 @@ export const authUser = createAsyncThunk(
 
 export const getUser = createAsyncThunk(
   "user/getUser",
-  async (undefined, thunkAPI) => {
-    console.log("getUser::getUser", apiUrl, thunkAPI);
+  async (
+    {
+      currentLocation,
+    }: { currentLocation: ReturnType<typeof useLocation> | null },
+    thunkAPI
+  ) => {
+    let dispatch: AppDispatch = useDispatch(); // Correctly typed dispatch
+    console.log("getUser::", apiUrl, thunkAPI, currentLocation);
 
     try {
-      console.log("getUser::", apiUrl, thunkAPI);
-
       // Get token from state
       const state = thunkAPI.getState() as RootState;
-      const { token } = state.user ?? null;
+      const { user, token } = state.user ?? null;
 
-      const user = await getUserFetch(token);
-      console.log("get user::", user);
-
-      if (!user) {
-        console.error("getUser::error", "User is null");
-        // throw new Error("Token is null");
-        return thunkAPI.rejectWithValue("User is null");
+      // Init
+      console.log("initProfile::", currentLocation);
+      if (!token) {
+        updateRedirectTo("/login");
+        return { user: null };
       }
 
-      return { user: user };
+      if (token && !user?.id) {
+        console.log(
+          "initProfile:: We have a token, but no user, we can get the user"
+        );
+        if (location.pathname === "/login") updateRedirectTo("/profile");
+
+        const data = await getUserFetch(token);
+        console.log("get user data::", data, user);
+
+        if (!data) {
+          console.error("getUser::error", "User is null");
+          // throw new Error("Token is null");
+          return thunkAPI.rejectWithValue("User is null");
+        }
+
+        return { user: user };
+      }
     } catch (error) {
       // debugger;
       console.error("getUser::error", error, (error as Error)?.message);
@@ -120,47 +138,20 @@ const userActions = createSlice({
   initialState,
   // An object of "case reducers". Key names will be used to generate actions.
   reducers: {
-    /*
-    increment(state) {
-      state.value++
-    },
-    decrement(state) {
-      state.value--
-    },
-    */
     login: (state, action: PayloadAction<AuthState>) => {
-      console.log("login::");
+      console.log("login::", state.redirectTo);
       document.cookie = `api_token=${action.payload.token}; path=/; max-age=3600`;
       state.token = action.payload.token;
       state.isAuthenticated = true;
+      state.error = null;
+      state.redirectTo = "/profile";
+      // updateRedirectTo("/profile");
+      console.log("login::", state.redirectTo);
     },
     logout: (state) => {
       console.log("logout::");
       document.cookie = "api_token=null; path=/; max-age=0";
-      // Go back to initialState object
-      // Object.assign(state, initialState);
-      // Better practice
-      return { ...initialState };
-    },
-    // Updated initProfile reducer to accept location and navigate as arguments
-    initProfile: (
-      state,
-      action: PayloadAction<{
-        location: ReturnType<typeof useLocation>;
-      }>
-    ) => {
-      let dispatch: AppDispatch = useDispatch(); // Correctly typed dispatch
-      const { location } = action.payload || {};
-      console.log("initProfile::", location);
-      if (!state.token) state.redirectTo = "/login";
-      if (state.token && !state.user?.id) {
-        console.log(
-          "initProfile:: We have a token, but no user, we can get the user"
-        );
-        //getUser();
-        dispatch(getUser());
-        if (location.pathname === "/login") state.redirectTo = "/profile";
-      }
+      return { ...initialState }; // Go back to initialState object
     },
     updateProfile: (state, action: PayloadAction<User>) => {
       console.log("updateProfile::", action.payload);
@@ -196,7 +187,7 @@ const userActions = createSlice({
       .addCase(getUser.fulfilled, (state, action) => {
         // User
         userActions.caseReducers.updateProfile(state, {
-          payload: action.payload.user,
+          payload: action.payload?.user ?? null,
           type: "user/updateProfile",
         });
       })
@@ -210,12 +201,6 @@ const userActions = createSlice({
   },
 });
 
-export const {
-  login,
-  logout,
-  initProfile,
-  updateProfile,
-  updateError,
-  updateRedirectTo,
-} = userActions.actions;
+export const { login, logout, updateProfile, updateError, updateRedirectTo } =
+  userActions.actions;
 export default userActions.reducer;

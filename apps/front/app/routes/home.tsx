@@ -5,7 +5,7 @@ import { useDispatch } from "react-redux";
 
 import type { AppDispatch } from "../store/store";
 // import type { UserState } from "../types/User";
-import { initProfile } from "../store/userReducer";
+import { getUser } from "../store/userReducer";
 
 import Hero from "../components/hero/hero";
 import Features from "../components/features/features";
@@ -44,8 +44,8 @@ export default function Home({}: Route.ComponentProps) {
 
   useEffect(() => {
     // On first load, init app
-    dispatch(initProfile({ location }));
-  }, []);
+    dispatch(getUser({ currentLocation: location }));
+  }, [location]);
 
   return (
     <>

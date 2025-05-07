@@ -20,11 +20,7 @@ import Modal from "./components/modal/modal";
 
 import { useDispatch, useSelector, Provider } from "react-redux";
 import type { AppDispatch } from "./store/store";
-import {
-  initProfile,
-  updateError,
-  updateRedirectTo,
-} from "./store/userReducer";
+import { getUser, updateError, updateRedirectTo } from "./store/userReducer";
 
 import store from "./store/store";
 import type { UserState } from "./types";
@@ -61,13 +57,15 @@ export default function App() {
   let dispatch: AppDispatch = useDispatch(); // Correctly typed dispatch
 
   useEffect(() => {
+    console.log("root::", location);
     // On first load, init app
-    dispatch(initProfile({ location }));
-  }, [location, navigate]);
+    dispatch(getUser({ currentLocation: location }));
+  }, [location]);
 
   // Redirect
   const redirectTo = useSelector((state: UserState) => state.redirectTo);
   useEffect(() => {
+    console.log("redirectTo", redirectTo);
     if (redirectTo) {
       navigate(redirectTo);
     }

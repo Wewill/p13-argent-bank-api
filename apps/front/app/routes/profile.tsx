@@ -2,7 +2,7 @@ import type { Route } from "./+types/profile";
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
-import { putUser, getUser, initProfile } from "../store/userReducer";
+import { putUser, getUser } from "../store/userReducer";
 
 import type { AppDispatch } from "../store/store";
 import type { UserState } from "../types/User";
@@ -37,8 +37,8 @@ export default function Profile() {
 
   useEffect(() => {
     // On first load, init app
-    dispatch(initProfile({ location }));
-  }, []);
+    dispatch(getUser({ currentLocation: location }));
+  }, [location]);
 
   // Editing
   const [editing, setEditing] = useState(false);
@@ -59,7 +59,7 @@ export default function Profile() {
       })
     );
     setEditing(false);
-    dispatch(getUser());
+    dispatch(getUser({ currentLocation: null }));
   };
 
   return (

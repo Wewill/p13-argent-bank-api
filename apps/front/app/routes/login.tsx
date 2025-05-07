@@ -2,7 +2,7 @@ import type { Route } from "./+types/login";
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
-import { initProfile, authUser } from "../store/userReducer";
+import { getUser, authUser } from "../store/userReducer";
 
 import type { AppDispatch } from "../store/store";
 import type { UserState } from "../types/User";
@@ -19,8 +19,8 @@ export default function Login() {
 
   useEffect(() => {
     // On first load, init app
-    dispatch(initProfile({ location }));
-  }, []);
+    dispatch(getUser({ currentLocation: location }));
+  }, [location]);
 
   // Login
   const [email, setEmail] = useState("tony@stark.com");
