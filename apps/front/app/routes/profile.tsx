@@ -1,11 +1,12 @@
 import type { Route } from "./+types/profile";
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
 import { putUser, getUser } from "../store/userReducer";
 
 import type { AppDispatch } from "../store/store";
 import type { UserState } from "../types/User";
+
+import Account from "../components/account/account";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -99,8 +100,8 @@ export default function Profile() {
               onClick={() => {
                 setEditing(false);
                 setName({
-                  firstName: user.user?.firstName,
-                  lastName: user.user?.lastName,
+                  firstName: user.user?.firstName || "",
+                  lastName: user.user?.lastName || "",
                 });
               }}
             >
@@ -113,37 +114,7 @@ export default function Profile() {
           </button>
         )}
       </div>
-      <h2 className="sr-only">Accounts</h2>
-      <section className="account">
-        <div className="account-content-wrapper">
-          <h3 className="account-title">Argent Bank Checking (x8349)</h3>
-          <p className="account-amount">$2,082.79</p>
-          <p className="account-amount-description">Available Balance</p>
-        </div>
-        <div className="account-content-wrapper cta">
-          <button className="transaction-button">View transactions</button>
-        </div>
-      </section>
-      <section className="account">
-        <div className="account-content-wrapper">
-          <h3 className="account-title">Argent Bank Savings (x6712)</h3>
-          <p className="account-amount">$10,928.42</p>
-          <p className="account-amount-description">Available Balance</p>
-        </div>
-        <div className="account-content-wrapper cta">
-          <button className="transaction-button">View transactions</button>
-        </div>
-      </section>
-      <section className="account">
-        <div className="account-content-wrapper">
-          <h3 className="account-title">Argent Bank Credit Card (x8349)</h3>
-          <p className="account-amount">$184.30</p>
-          <p className="account-amount-description">Current Balance</p>
-        </div>
-        <div className="account-content-wrapper cta">
-          <button className="transaction-button">View transactions</button>
-        </div>
-      </section>
+      <Account />
     </>
   );
 }

@@ -1,31 +1,31 @@
+import { useEffect, useState } from "react";
 import {
   isRouteErrorResponse,
+  Link,
   Links,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
-  Link,
+  useLocation,
+  useNavigate,
 } from "react-router";
-import { useLocation, useNavigate } from "react-router";
-import { useState, useEffect } from "react";
 
 import type { Route } from "./+types/root";
 import "./app.css";
 import "./css/main.css";
 
-import Header from "./components/header";
 import Footer from "./components/footer";
+import Header from "./components/header";
 import Modal from "./components/modal/modal";
 import Spinner from "./components/spinner";
 
-import { useDispatch, useSelector, Provider } from "react-redux";
+import { Provider, useDispatch, useSelector } from "react-redux";
 import type { AppDispatch } from "./store/store";
-import { getUser, updateError, logout } from "./store/userReducer";
+import { getUser, logout, updateError } from "./store/userReducer";
 
-import store from "./store/store";
-import type { UserState } from "./types";
 import type { RootState } from "./store/store";
+import store from "./store/store";
 
 export const links: Route.LinksFunction = () => [
   {
@@ -80,14 +80,16 @@ export function AppInit() {
       console.error("AppInit failed:", error);
       // navigate("/login");
     }
+    // Handle more status
   }, [token, status, error]);
 
-  // si tu veux afficher un loader global :
+  // Loading status
   if (status === "loading") return <Spinner />;
 
+  // Debug
   return (
     <div className="text-blue-400">
-      Token : {token ? "OUI" : "NON"} Status : {status}
+      Token : {token ? "√" : "Ø"} Status : {status}
     </div>
   );
 }
@@ -101,7 +103,6 @@ export default function App() {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    console.log("error::", error);
     if (error) {
       setShowModal(true);
     }
