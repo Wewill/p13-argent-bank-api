@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import { useNavigate, NavLink, href } from "react-router";
+import { NavLink, href } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../store/userReducer";
 
@@ -8,7 +7,6 @@ import type { UserState } from "../../types/User";
 
 export function Nav() {
   let dispatch: AppDispatch = useDispatch(); // Correctly typed dispatch
-  let navigate = useNavigate();
 
   let user = useSelector((state: { user: UserState }) => state.user);
 

@@ -3,7 +3,7 @@ const apiUrl = process.env.API_URL;
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { LoginCredentials, UserState, AuthState, User } from "../types";
-import { loginUserFetch, getUserFetch, setUserFetch } from "./fetch";
+import { loginUserFetch, getUserFetch, setUserFetch } from "./userFetch";
 
 import type { RootState } from "./store";
 
