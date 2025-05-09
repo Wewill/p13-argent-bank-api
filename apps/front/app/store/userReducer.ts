@@ -26,7 +26,8 @@ const initialState: UserState = {
 export const authUser = createAsyncThunk(
   "user/authUser",
   async ({ email, password }: LoginCredentials, thunkAPI) => {
-    updateStatus("loading");
+    // thunkAPI.dispatch(updateStatus("loading"));
+
     try {
       console.log("authUser::", email, password, apiUrl);
 
@@ -34,17 +35,14 @@ export const authUser = createAsyncThunk(
       console.log("get token::", login.token);
 
       if (!login.token) {
-        updateStatus("error");
         console.error("authUser::error", "Token is null");
         // throw new Error("Token is null");
         return thunkAPI.rejectWithValue("Token is null");
       } else {
-        updateStatus("authenticated");
       }
 
       return { token: login.token };
     } catch (error) {
-      updateStatus("error");
       // debugger;
       console.error("authUser::error", error, (error as Error)?.message);
       // throw new Error("Auth error");
@@ -59,7 +57,6 @@ export const getUser = createAsyncThunk(
   "user/getUser",
   async (undefined, thunkAPI) => {
     console.log("getUser::", apiUrl, thunkAPI);
-    updateStatus("loading");
     try {
       // Get token from state
       const state = thunkAPI.getState() as RootState;
@@ -69,17 +66,14 @@ export const getUser = createAsyncThunk(
       console.log("get user data::", data);
 
       if (!data) {
-        updateStatus("error");
         console.error("getUser::error", "User data is null");
         // throw new Error("Token is null");
         return thunkAPI.rejectWithValue("User data is null");
       } else {
-        updateStatus("idle");
       }
 
       return { user: data };
     } catch (error) {
-      updateStatus("error");
       // debugger;
       console.error("getUser::error", error, (error as Error)?.message);
       // throw new Error("Get user error");
@@ -92,7 +86,7 @@ export const getUser = createAsyncThunk(
 
 export const putUser = createAsyncThunk(
   "user/putUser",
-  async (newUser: UserState, thunkAPI) => {
+  async (newUser: User, thunkAPI) => {
     try {
       console.log("putUser::", newUser, apiUrl, thunkAPI);
 
@@ -132,7 +126,7 @@ const userActions = createSlice({
       document.cookie = "api_token=null; path=/; max-age=0";
       return { ...initialState, token: null }; // Go back to initialState object
     },
-    updateProfile: (state, action: PayloadAction<User>) => {
+    updateProfile: (state, action: PayloadAction<User | null>) => {
       console.log("updateProfile::", action.payload);
       state.user = action.payload;
     },
@@ -149,29 +143,53 @@ const userActions = createSlice({
   // A "builder callback" function used to add more reducers
   extraReducers: (builder) => {
     builder
+      .addCase(authUser.pending, (state, action) => {
+        state.status = "loading";
+      })
       .addCase(authUser.fulfilled, (state, action) => {
-        // Login
+        state.status = "success";
         userActions.caseReducers.login(state, {
           payload: { token: action.payload.token as string },
           type: "user/login",
         });
       })
       .addCase(authUser.rejected, (state, action) => {
-        console.error("Erreur de login: rejected", action.payload);
+        state.status = "error";
         userActions.caseReducers.updateError(state, {
           payload: action.payload as string,
           type: "user/updateError",
         });
       })
+      .addCase(getUser.pending, (state, action) => {
+        state.status = "loading";
+      })
       .addCase(getUser.fulfilled, (state, action) => {
-        // User
+        state.status = "success";
         userActions.caseReducers.updateProfile(state, {
           payload: action.payload?.user ?? null,
           type: "user/updateProfile",
         });
       })
       .addCase(getUser.rejected, (state, action) => {
-        console.error("Erreur de l'api: rejected", action.payload);
+        state.status = "error";
+        userActions.caseReducers.updateError(state, {
+          payload: action.payload as string,
+          type: "user/updateError",
+        });
+      })
+      // Putuser
+      .addCase(putUser.pending, (state, action) => {
+        state.status = "loading";
+      })
+      .addCase(putUser.fulfilled, (state, action) => {
+        state.status = "success";
+        userActions.caseReducers.updateProfile(state, {
+          payload: action.payload?.user ?? null,
+          type: "user/updateProfile",
+        });
+      })
+      .addCase(putUser.rejected, (state, action) => {
+        state.status = "error";
         userActions.caseReducers.updateError(state, {
           payload: action.payload as string,
           type: "user/updateError",

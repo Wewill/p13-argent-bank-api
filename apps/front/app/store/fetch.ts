@@ -1,5 +1,5 @@
 const apiUrl = process.env.API_URL;
-import type { LoginCredentials, UserState, AuthState } from "../types";
+import type { LoginCredentials, User, AuthState } from "../types";
 
 // Get Login
 export const loginUserFetch = async ({
@@ -33,7 +33,7 @@ export const loginUserFetch = async ({
 };
 
 // Get User
-export const getUserFetch = async (token: string): Promise<UserState> => {
+export const getUserFetch = async (token: string): Promise<User> => {
   const response = await fetch(`${apiUrl}/api/v1/user/profile`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
@@ -62,8 +62,8 @@ export const getUserFetch = async (token: string): Promise<UserState> => {
 // Set User
 export const setUserFetch = async (
   token: string,
-  newUser: UserState
-): Promise<UserState> => {
+  newUser: User
+): Promise<User> => {
   const response = await fetch(`${apiUrl}/api/v1/user/profile`, {
     method: "PUT",
     headers: {
@@ -71,8 +71,8 @@ export const setUserFetch = async (
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      firstName: newUser.user?.firstName,
-      lastName: newUser.user?.lastName,
+      firstName: newUser?.firstName,
+      lastName: newUser?.lastName,
     }),
   });
 

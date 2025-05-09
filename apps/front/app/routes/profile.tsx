@@ -36,32 +36,22 @@ export default function Profile() {
   // Editing
   const [editing, setEditing] = useState(false);
   let { user } = useSelector((state: { user: UserState }) => state);
-  const [name, setName] = useState({
-    firstName: "",
-    lastName: "",
-  });
 
-  useEffect(() => {
-    if (user.user) {
-      setName({
-        firstName: user.user?.firstName,
-        lastName: user.user?.lastName,
-      });
-    }
-  }, [user]);
-
-  const handleChange = async () => {
-    await dispatch(
+  const handleChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+    const name = {
+      firstName: formData.get("firstName") as string,
+      lastName: formData.get("lastName") as string,
+    };
+    dispatch(
       putUser({
-        token: user?.token,
-        user: {
-          firstName: name.firstName ?? "",
-          lastName: name.lastName ?? "",
-        },
+        firstName: name.firstName ?? "",
+        lastName: name.lastName ?? "",
       })
     );
     setEditing(false);
-    dispatch(getUser());
   };
 
   return (
@@ -73,41 +63,37 @@ export default function Profile() {
           {user.user?.firstName} {user.user?.lastName}!
         </h1>
         {editing ? (
-          <div className="edit-form">
+          <form className="edit-form" onSubmit={handleChange}>
             <div className="input-wrapper flex !flex-row items-center justify-center gap-4">
               <input
                 type="text"
                 placeholder="First Name"
+                name="firstName"
+                required
                 className="border-1 border-gray-300 rounded-sm bg-slate-800 w-50"
-                value={name.firstName || ""}
-                onChange={(e) =>
-                  setName({ ...name, firstName: e.target.value })
-                }
+                defaultValue={user.user?.firstName || ""}
               />
               <input
                 type="text"
                 placeholder="Last Name"
+                name="lastName"
+                required
                 className="border-1 border-gray-300 rounded-sm bg-slate-800 w-50"
-                value={name.lastName || ""}
-                onChange={(e) => setName({ ...name, lastName: e.target.value })}
+                defaultValue={user.user?.lastName || ""}
               />
             </div>
-            <button className="save-button" onClick={() => handleChange()}>
+            <button className="save-button" type="submit">
               Save
             </button>
             <button
               className="cancel-button"
               onClick={() => {
                 setEditing(false);
-                setName({
-                  firstName: user.user?.firstName || "",
-                  lastName: user.user?.lastName || "",
-                });
               }}
             >
               Cancel
             </button>
-          </div>
+          </form>
         ) : (
           <button className="edit-button" onClick={() => setEditing(true)}>
             Edit Name
