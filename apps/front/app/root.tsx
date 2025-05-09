@@ -65,6 +65,7 @@ export function AppInit() {
 
   useEffect(() => {
     console.log("AppInit::", token, status, user, error);
+
     if (!token) {
       // pas de token = on clear et redirige
       dispatch(logout());
@@ -73,20 +74,21 @@ export function AppInit() {
       // token dispo mais pas de user = on fetch
       dispatch(getUser());
       navigate("/profile");
-    } else if (token && user.user?.id) {
+    } else if (token && user.user?.id && location.pathname !== "/profile") {
       // token & user = on redirige vers profile
       navigate("/profile");
-    } else if (error) {
-      console.error("AppInit failed:", error);
-      // navigate("/login");
     }
-    // Handle more status
+    // Handle more statuses...
   }, [token, status, error]);
+
+  // Showing errors
+  if (error) return <AppError />;
 
   // Loading status
   if (status === "loading") return <Spinner />;
 
   // Debug
+  return null;
   return (
     <div className="text-blue-400">
       Token : {token ? "√" : "Ø"} Status : {status}
@@ -96,35 +98,11 @@ export function AppInit() {
 
 export default function App() {
   let location = useLocation(); // Get the current location object
-  let dispatch: AppDispatch = useDispatch(); // Correctly typed dispatch
-
-  // Error
-  const { error } = useSelector((store: RootState) => store.user);
-  const [showModal, setShowModal] = useState(false);
-
-  useEffect(() => {
-    if (error) {
-      setShowModal(true);
-    }
-  }, [error]);
 
   return (
     <>
       <Header />
       <main className={`main ${location.pathname !== "/" ? "bg-dark" : ""}`}>
-        {showModal && (
-          <>
-            <Modal
-              onClose={() => {
-                setShowModal(false);
-                dispatch(updateError(""));
-              }}
-              title="Damned, an error occurred !"
-            >
-              <p>{error ?? "Unknow error"}</p>
-            </Modal>
-          </>
-        )}
         <AppInit />
         <Outlet />
       </main>
@@ -132,6 +110,24 @@ export default function App() {
     </>
   );
 }
+
+const AppError = ({}) => {
+  const { error } = useSelector((store: RootState) => store.user);
+  const dispatch: AppDispatch = useDispatch(); // Correctly typed dispatch
+  const onClose = () => {
+    dispatch(updateError(null));
+  };
+
+  if (!error) {
+    return null; // Don't render the modal if there's no error
+  }
+
+  return (
+    <Modal onClose={onClose} title="Damned, an error occurred !">
+      <p>{error ?? "Unknow error"}</p>
+    </Modal>
+  );
+};
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   let message = "Oops!";
@@ -168,45 +164,3 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     </>
   );
 }
-
-// V2 : Mathieu, ne pas charger le modal dans le layout
-// const ModalError = ({}) => {
-//   const error = useSelector((state: UserState) => state.error);
-//   const dispatch: AppDispatch = useDispatch(); // Correctly typed dispatch
-//   const onClose = () => {
-//     dispatch(updateError(null));
-//   };
-
-//   if (!error) {
-//     return null; // Don't render the modal if there's no error
-//   }
-
-//   return (
-//     <Modal onClose={onClose} title="Damned, an error occurred !">
-//       <p>{error ?? "Unknow error"}</p>
-//     </Modal>
-//   );
-// };
-
-// export default function App() {
-//   let location = useLocation(); // Get the current location object
-//   // let user = useSelector((state: { user: UserState }) => state.user);
-
-//   let dispatch: AppDispatch = useDispatch(); // Correctly typed dispatch
-
-//   useEffect(() => {
-//     // On first load, init app
-//     dispatch(initProfile());
-//   }, []);
-
-//   return (
-//     <>
-//       <Header />
-//       <main className={`main ${location.pathname !== "/" ? "bg-dark" : ""}`}>
-//         <ModalError />
-//         <Outlet />
-//       </main>
-//       <Footer />
-//     </>
-//   );
-// }

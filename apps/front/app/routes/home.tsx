@@ -1,12 +1,4 @@
 import type { Route } from "./+types/home";
-import { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router";
-import { useDispatch } from "react-redux";
-
-import type { AppDispatch } from "../store/store";
-// import type { UserState } from "../types/User";
-import { getUser } from "../store/userReducer";
-
 import Hero from "../components/hero/hero";
 import Features from "../components/features/features";
 
@@ -37,16 +29,6 @@ export function HydrateFallback() {
 }
 
 export default function Home({}: Route.ComponentProps) {
-  // // Init
-  // let location = useLocation(); // Get the current location object
-  // let navigate = useNavigate(); // Get the navigate function
-  // let dispatch: AppDispatch = useDispatch(); // Correctly typed dispatch
-
-  // useEffect(() => {
-  //   // On first load, init app
-  //   dispatch(getUser());
-  // }, [location]);
-
   return (
     <>
       <Hero />

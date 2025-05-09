@@ -26,21 +26,13 @@ const initialState: UserState = {
 export const authUser = createAsyncThunk(
   "user/authUser",
   async ({ email, password }: LoginCredentials, thunkAPI) => {
-    // thunkAPI.dispatch(updateStatus("loading"));
-
+    // thunkAPI.dispatch(updateStatus("loading")); // example : dispatch an action inside a thunk
     try {
-      console.log("authUser::", email, password, apiUrl);
-
       const login = await loginUserFetch({ email, password });
-      console.log("get token::", login.token);
-
       if (!login.token) {
-        console.error("authUser::error", "Token is null");
         // throw new Error("Token is null");
-        return thunkAPI.rejectWithValue("Token is null");
-      } else {
+        return thunkAPI.rejectWithValue("Auth error : Token is null");
       }
-
       return { token: login.token };
     } catch (error) {
       // debugger;
@@ -56,22 +48,16 @@ export const authUser = createAsyncThunk(
 export const getUser = createAsyncThunk(
   "user/getUser",
   async (undefined, thunkAPI) => {
-    console.log("getUser::", apiUrl, thunkAPI);
     try {
       // Get token from state
       const state = thunkAPI.getState() as RootState;
       const { token } = state.user ?? null;
 
       const data = await getUserFetch(token);
-      console.log("get user data::", data);
-
       if (!data) {
-        console.error("getUser::error", "User data is null");
         // throw new Error("Token is null");
         return thunkAPI.rejectWithValue("User data is null");
-      } else {
       }
-
       return { user: data };
     } catch (error) {
       // debugger;
@@ -88,15 +74,15 @@ export const putUser = createAsyncThunk(
   "user/putUser",
   async (newUser: User, thunkAPI) => {
     try {
-      console.log("putUser::", newUser, apiUrl, thunkAPI);
-
       // Get token from state
       const state = thunkAPI.getState() as RootState;
       const { token } = state.user ?? null;
 
       const data = await setUserFetch(token, newUser);
-      console.log("put user::result data", data);
-
+      if (!data) {
+        // throw new Error("Token is null");
+        return thunkAPI.rejectWithValue("User data is null");
+      }
       return { user: data }; // ex : body: { user, token } ...
     } catch (error) {
       // debugger;
@@ -124,18 +110,15 @@ const userActions = createSlice({
     logout: (state) => {
       console.log("logout::");
       document.cookie = "api_token=null; path=/; max-age=0";
-      return { ...initialState, token: null }; // Go back to initialState object
+      return { ...initialState, token: null, error: state.error }; // Go back to initialState object
     },
     updateProfile: (state, action: PayloadAction<User | null>) => {
-      console.log("updateProfile::", action.payload);
       state.user = action.payload;
     },
     updateError: (state, action: PayloadAction<string | null>) => {
-      console.error("updateError::", action.payload);
       state.error = action.payload;
     },
     updateStatus: (state, action: PayloadAction<string | null>) => {
-      console.error("updateStatus::", action.payload);
       state.status = action.payload;
     },
   },
@@ -143,6 +126,7 @@ const userActions = createSlice({
   // A "builder callback" function used to add more reducers
   extraReducers: (builder) => {
     builder
+      // authUser
       .addCase(authUser.pending, (state, action) => {
         state.status = "loading";
       })
@@ -160,6 +144,7 @@ const userActions = createSlice({
           type: "user/updateError",
         });
       })
+      // getUser
       .addCase(getUser.pending, (state, action) => {
         state.status = "loading";
       })
@@ -177,7 +162,7 @@ const userActions = createSlice({
           type: "user/updateError",
         });
       })
-      // Putuser
+      // putUser
       .addCase(putUser.pending, (state, action) => {
         state.status = "loading";
       })

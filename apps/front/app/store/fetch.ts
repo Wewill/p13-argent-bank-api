@@ -1,3 +1,4 @@
+// Handle calls and responses to the API
 const apiUrl = process.env.API_URL;
 import type { LoginCredentials, User, AuthState } from "../types";
 
