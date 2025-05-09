@@ -1,7 +1,7 @@
 import type { Route } from "./+types/profile";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { putUser, getUser } from "../store/userReducer";
+import { putUser } from "../store/userReducer";
 
 import type { AppDispatch } from "../store/store";
 import type { UserState } from "../types/User";
@@ -39,12 +39,14 @@ export default function Profile() {
 
   const handleChange = async (e: React.FormEvent) => {
     e.preventDefault();
+
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
     const name = {
       firstName: formData.get("firstName") as string,
       lastName: formData.get("lastName") as string,
     };
+
     dispatch(
       putUser({
         firstName: name.firstName ?? "",

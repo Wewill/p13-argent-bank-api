@@ -1,8 +1,6 @@
 import type { Route } from "./+types/login";
-import { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
-import { getUser, authUser } from "../store/userReducer";
+import { authUser } from "../store/userReducer";
 
 import type { AppDispatch } from "../store/store";
 import type { UserState } from "../types/User";
@@ -13,16 +11,17 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Login() {
   let dispatch: AppDispatch = useDispatch(); // Correctly typed dispatch
-
-  // Login
-  const [email, setEmail] = useState("tony@stark.com");
-  const [password, setPassword] = useState("password123");
-
   let user = useSelector((state: { user: UserState }) => state.user);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
     dispatch(authUser({ email, password }));
   };
 
@@ -37,9 +36,9 @@ export default function Login() {
             <input
               type="text"
               id="email"
+              name="email"
               className="border-1 border-gray-300 rounded-sm"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              defaultValue="tony@stark.com"
             />
           </div>
           <div className="input-wrapper">
@@ -47,9 +46,9 @@ export default function Login() {
             <input
               type="password"
               id="password"
+              name="password"
               className="border-1 border-gray-300 rounded-sm"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              defaultValue="password123"
             />
           </div>
           <div className="input-remember">
