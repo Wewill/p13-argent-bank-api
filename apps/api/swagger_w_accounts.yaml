@@ -157,6 +157,12 @@ paths:
           required: false
           description: Query transactions by account id
         - in: query
+          name: month
+          type: string
+          format: date
+          required: false
+          description: Query transaction of the current month (MM)
+        - in: query
           name: limit
           type: integer
           required: false
