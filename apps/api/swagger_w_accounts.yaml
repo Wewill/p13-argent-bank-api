@@ -112,14 +112,14 @@ paths:
           description: Invalid Fields
         "500":
           description: Internal Server Error
-  /account:
-    post:
+  /accounts:
+    get:
       security:
         - Bearer: []
       tags:
-        - Account
-      summary: User Account API
-      description: API for fetching a user account
+        - Accounts
+      summary: Get account(s) API
+      description: API for fetching a user accounts
       parameters:
         - in: header
           name: Authorization
@@ -130,37 +130,7 @@ paths:
         - application/json
       responses:
         "200":
-          description: User account retrieved successfully
-          schema:
-            $ref: "#/definitions/ApiResponse"
-        "400":
-          description: Invalid Fields
-        "500":
-          description: Internal Server Error
-    put:
-      security:
-        - Bearer: []
-      tags:
-        - Account
-      summary: User Account API
-      description: API for updating a user account
-      parameters:
-        - in: header
-          name: Authorization
-          type: string
-          description: Attach Bearer JWT token
-          required: true
-        - in: body
-          name: body
-          description: Update user account attributes
-          required: true
-          schema:
-            $ref: "#/definitions/UserProfile"
-      produces:
-        - application/json
-      responses:
-        "200":
-          description: User account updated successfully
+          description: User accounts retrieved successfully
           schema:
             $ref: "#/definitions/ApiResponse"
         "400":
@@ -168,12 +138,12 @@ paths:
         "500":
           description: Internal Server Error
   /transactions:
-    post:
+    get:
       security:
         - Bearer: []
       tags:
         - Transactions
-      summary: User Transaction API
+      summary: Get transactions by Account API
       description: API for fetching transaction(s)
       parameters:
         - in: header
@@ -182,10 +152,10 @@ paths:
           description: Attach Bearer JWT token
           required: true
         - in: query
-          name: id
+          name: account_id
           type: integer
           required: false
-          description: Query a transaction by id
+          description: Query transactions by account id
         - in: query
           name: limit
           type: integer
@@ -226,6 +196,7 @@ paths:
               message:
                 type: string
                 enum:
+                  - Invalid account id.
                   - Invalid date format. Expected format is YYYY-MM-DD.
                   - Invalid date range: \'from\' must be earlier than \'to\'.
                   - One or more parameters are invalid.
@@ -251,12 +222,110 @@ paths:
               message:
                 type: string
                 example: An unexpected error occurred.
+  /transaction:
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - Transaction
+      summary: Get transaction details API
+      description: API for fetching transactions ( editable ) details
+      parameters:
+        - in: header
+          name: Authorization
+          type: string
+          description: Attach Bearer JWT token
+          required: true
+        - in: query
+          name: id
+          type: integer
+          required: false
+          description: Query a transaction by id
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: Transaction retrieved successfully
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "400":
+          description: Bad Request – invalid query parameters
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+                example: 400
+              message:
+                type: string
+                enum:
+                  - Invalid transaction id.
+                  - One or more parameters are invalid.
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+                example: 500
+              message:
+                type: string
+                example: An unexpected error occurred.
+    post:
+      security:
+        - Bearer: []
+      tags:
+        - Transaction
+      summary: Post transaction details
+      description: API for fetching transactions ( editable ) details
+      parameters:
+        - in: header
+          name: Authorization
+          type: string
+          description: Attach Bearer JWT token
+          required: true
+        - in: query
+          name: id
+          type: integer
+          required: false
+          description: Query a transaction by id
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: Transaction retrieved successfully
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "400":
+          description: Bad Request – invalid query parameters
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+                example: 400
+              message:
+                type: string
+                enum:
+                  - Invalid transaction id.
+                  - One or more parameters are invalid.
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+                example: 500
+              message:
+                type: string
     put:
       security:
         - Bearer: []
       tags:
-        - Transactions
-      summary: Update a transaction
+        - Transaction
+      summary: Update transaction detail
       description: API for updating a transaction
       parameters:
         - in: header
@@ -285,8 +354,8 @@ paths:
       security:
         - Bearer: []
       tags:
-        - Transactions
-      summary: Delete a transaction
+        - Transaction
+      summary: Delete transaction details
       description: API for deleting a transaction by ID
       parameters:
         - in: header
@@ -379,7 +448,7 @@ definitions:
       type:
         type: string
         description: account type
-  Transaction:
+  Transactions:
     type: object
     properties:
       id:
@@ -401,6 +470,12 @@ definitions:
       balance:
         type: number
         description: transaction last balance
+  Transaction:
+    type: object
+    properties:
+      id:
+        type: string
+        description: transaction id
       type:
         type: array
         items:
