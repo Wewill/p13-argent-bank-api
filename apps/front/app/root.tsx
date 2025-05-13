@@ -27,6 +27,8 @@ import { getUser, logout, updateError } from "./store/userReducer";
 import type { RootState } from "./store/store";
 import store from "./store/store";
 
+import { isTokenValid } from "./helpers/jwt";
+
 export const links: Route.LinksFunction = () => [
   {
     rel: "stylesheet",
@@ -70,11 +72,20 @@ export function AppInit() {
       // pas de token = on clear et redirige
       dispatch(logout());
       navigate("/login");
-    } else if (token && !user.user?.id) {
+    } else if (token && !isTokenValid(token)) {
+      // token dispo mais pas valide = on clear et redirige
+      dispatch(logout());
+      navigate("/login");
+    } else if (token && isTokenValid(token) && !user.user?.id) {
       // token dispo mais pas de user = on fetch
       dispatch(getUser());
       navigate("/profile");
-    } else if (token && user.user?.id && location.pathname !== "/profile") {
+    } else if (
+      token &&
+      isTokenValid(token) &&
+      user.user?.id &&
+      location.pathname !== "/profile"
+    ) {
       // token & user = on redirige vers profile
       navigate("/profile");
     }

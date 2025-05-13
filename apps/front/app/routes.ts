@@ -5,3 +5,5 @@ export default [
   route("profile", "./routes/profile.tsx"), //:userId
   route("login", "./routes/login.tsx"),
 ] satisfies RouteConfig;
+
+// @IMPROVE : Use custom routes to handle authentication status and group access

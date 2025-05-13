@@ -4,6 +4,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { LoginCredentials, UserState, AuthState, User } from "../types";
 import { loginUserFetch, getUserFetch, setUserFetch } from "./userFetch";
+import { getPayload } from "../helpers/jwt";
 
 import type { RootState } from "./store";
 
@@ -103,7 +104,27 @@ const userActions = createSlice({
   reducers: {
     login: (state, action: PayloadAction<AuthState>) => {
       console.log("login::", action.payload);
-      document.cookie = `api_token=${action.payload.token}; path=/; max-age=3600`;
+      if (!action.payload.token) {
+        console.error("login::error", "Token is null");
+        return { ...state, status: "error", error: "Token is null" };
+      }
+      // Get expiration datetime from JWT token
+      const tokenPayload = getPayload(action.payload.token);
+      if (!tokenPayload) {
+        console.error("login::error", "Token payload is null");
+        return { ...state, status: "error", error: "Token payload is null" };
+      }
+      console.info("login::tokenPayload", tokenPayload);
+      const expirationTime = tokenPayload.exp
+        ? tokenPayload.exp - Math.floor(Date.now() / 1000)
+        : 3600; // Default to 1 hour if exp is not present
+      console.info(
+        "login::expirationTime",
+        tokenPayload.exp,
+        expirationTime,
+        expirationTime / 3600 + "h"
+      );
+      document.cookie = `api_token=${action.payload.token}; path=/; max-age=${expirationTime}`; // 1h // @TODO > Get expiration time from server
       state.token = action.payload.token;
       return { ...state, status: "authenticated" }; // Go back to initialState object
     },
